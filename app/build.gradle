@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
 }
 android {
+    namespace 'com.bigdate.notify'
     compileSdk 34
     defaultConfig {
         applicationId "com.bigdate.notify"
