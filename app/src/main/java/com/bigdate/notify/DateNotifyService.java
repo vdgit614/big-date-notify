@@ -24,7 +24,7 @@ public class DateNotifyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String dateStr = new SimpleDateFormat("dd MMM", Locale.ENGLISH).format(new Date()).toUpperCase();
+        String dateStr = new SimpleDateFormat("dd- MM- yyyy,\nEEEE", Locale.ENGLISH).format(new Date());
 
         RemoteViews customView = new RemoteViews(getPackageName(), R.layout.notification_date);
         customView.setTextViewText(R.id.bigDateText, dateStr);
