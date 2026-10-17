@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showBigDateNotification() {
-        String dateStr = new SimpleDateFormat("dd MMM", Locale.ENGLISH).format(new Date()).toUpperCase();
+        String dateStr = new SimpleDateFormat("dd- MM- yyyy,\nEEEE", Locale.ENGLISH).format(new Date());
 
         RemoteViews customView = new RemoteViews(getPackageName(), R.layout.notification_date);
         customView.setTextViewText(R.id.bigDateText, dateStr);
@@ -45,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MAX);
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < 33) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
             NotificationManagerCompat.from(this).notify(1001, builder.build());
         }
     }
-          }
+}
