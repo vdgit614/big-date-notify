@@ -29,26 +29,21 @@ public class DateNotifyService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         
-        // पहली बार तुरंत Notification दिखाओ
         updateNotification();
 
-        // हर मिनट अपडेट करने वाला Timer
         updateRunnable = new Runnable() {
             @Override
             public void run() {
                 updateNotification();
-                // अगले 60 सेकंड बाद फिर चलाओ
                 handler.postDelayed(this, 60000);
             }
         };
-        // 60 सेकंड बाद पहला अपडेट
         handler.postDelayed(updateRunnable, 60000);
 
         return START_STICKY;
     }
 
     private void updateNotification() {
-        // मोबाइल की Current घड़ी से टाइम लेगा
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd- MM- yyyy", Locale.getDefault());
         SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
@@ -61,7 +56,7 @@ public class DateNotifyService extends Service {
         String contentText = currentDate + "\n" + currentDay + "\n" + currentTime;
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle("Big Date")
                 .setContentText(currentDate + " " + currentTime)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(contentText))
