@@ -1,82 +1,103 @@
 package com.bigdate.notify;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
-import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
 public class DateNotifyService extends Service {
-    private static final String CHANNEL_ID = "big_date_channel";
+
+    private static final String CHANNEL_ID = "BigDateChannel";
+    private static final int NOTIFICATION_ID = 1;
+    private Handler handler = new Handler();
+    private Runnable updateRunnable;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        createChannel();
+        createNotificationChannel();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Date now = new Date();
-        String dateStr = new SimpleDateFormat("dd- MM- yyyy", Locale.ENGLISH).format(now);
-        String dayStr = new SimpleDateFormat("EEEE", Locale.ENGLISH).format(now);
-        String timeStr = new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(now).toLowerCase();
+        
+        // पहली बार तुरंत Notification दिखाओ
+        updateNotification();
 
-        // क्रम: Date, Day, Time
-        String finalText = dateStr + "\n" + dayStr + "\n" + timeStr;
+        // हर मिनट अपडेट करने वाला Timer
+        updateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateNotification();
+                // अगले 60 सेकंड बाद फिर चलाओ
+                handler.postDelayed(this, 60000);
+            }
+        };
+        // 60 सेकंड बाद पहला अपडेट
+        handler.postDelayed(updateRunnable, 60000);
 
-        RemoteViews customView = new RemoteViews(getPackageName(), R.layout.notification_date);
-        customView.setTextViewText(R.id.bigDateText, finalText);
-
-        Intent clockIntent = new Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS);
-        PendingIntent pIntent = PendingIntent.getActivity(this, 0, clockIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_menu_my_calendar)
-                .setCustomContentView(customView)
-                .setCustomBigContentView(customView)
-                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
-                .setContentIntent(pIntent)
-                .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .build();
-
-        startForeground(1001, notification);
-        scheduleMidnightUpdate();
         return START_STICKY;
     }
 
-    private void scheduleMidnightUpdate() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        Intent intent = new Intent(this, BootReceiver.class);
-        intent.setAction("UPDATE_DATE");
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 5);
-        calendar.set(Calendar.MILLISECOND, 0);
-        if (alarmManager != null) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+    private void updateNotification() {
+        // मोबाइल की Current घड़ी से टाइम लेगा
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd- MM- yyyy", Locale.getDefault());
+        SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+
+        Date now = new Date();
+        String currentDate = dateFormat.format(now);
+        String currentDay = dayFormat.format(now);
+        String currentTime = timeFormat.format(now);
+
+        String contentText = currentDate + "\n" + currentDay + "\n" + currentTime;
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground) // आपका Icon
+                .setContentTitle("Big Date")
+                .setContentText(currentDate + " " + currentTime)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(contentText))
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build();
+
+        startForeground(NOTIFICATION_ID, notification);
+        
+        // अगर पहले से चल रहा है तो सिर्फ अपडेट कर देगा
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.notify(NOTIFICATION_ID, notification);
         }
     }
 
-    private void createChannel() {
+    private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Big Date", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Big Date Service",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Shows Big Date and Time");
             NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) manager.createNotificationChannel(channel);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (handler != null && updateRunnable != null) {
+            handler.removeCallbacks(updateRunnable);
         }
     }
 
