@@ -28,14 +28,15 @@ public class DateNotifyService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Date now = new Date();
-        String timeStr = new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(now).toLowerCase();
-        String dateStr = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH).format(now);
+        String dateStr = new SimpleDateFormat("dd- MM- yyyy", Locale.ENGLISH).format(now);
         String dayStr = new SimpleDateFormat("EEEE", Locale.ENGLISH).format(now);
+        String timeStr = new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(now).toLowerCase();
+
+        // क्रम: Date, Day, Time
+        String finalText = dateStr + "\n" + dayStr + "\n" + timeStr;
 
         RemoteViews customView = new RemoteViews(getPackageName(), R.layout.notification_date);
-        customView.setTextViewText(R.id.txt_time, timeStr);
-        customView.setTextViewText(R.id.txt_date, dateStr);
-        customView.setTextViewText(R.id.txt_day, dayStr);
+        customView.setTextViewText(R.id.bigDateText, finalText);
 
         Intent clockIntent = new Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS);
         PendingIntent pIntent = PendingIntent.getActivity(this, 0, clockIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -60,14 +61,12 @@ public class DateNotifyService extends Service {
         Intent intent = new Intent(this, BootReceiver.class);
         intent.setAction("UPDATE_DATE");
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 5);
         calendar.set(Calendar.MILLISECOND, 0);
-
         if (alarmManager != null) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
         }
@@ -82,5 +81,7 @@ public class DateNotifyService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) { return null; }
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 }
