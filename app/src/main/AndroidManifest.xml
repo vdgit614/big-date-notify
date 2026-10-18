@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="Big Date Notify"
-        android:theme="@style/Theme.AppCompat.Light">
+        android:theme="@android:style/Theme.DeviceDefault.Light"
+        android:requestLegacyExternalStorage="true">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -15,16 +24,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-                <receiver
+
+        <service
+            android:name=".DateNotifyService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:targetApi="34">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FG_SERVICE_TYPE"
+                android:value="Showing Big Date in status bar" />
+        </service>
+
+        <receiver
             android:name=".BootReceiver"
             android:enabled="true"
             android:exported="true">
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <service
-            android:name=".DateNotifyService"
-            android:exported="false" />
+
     </application>
 </manifest>
