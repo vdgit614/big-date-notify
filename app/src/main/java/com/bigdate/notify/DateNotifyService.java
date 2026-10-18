@@ -61,7 +61,7 @@ public class DateNotifyService extends Service {
         String contentText = currentDate + "\n" + currentDay + "\n" + currentTime;
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground) // आपका Icon
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Big Date")
                 .setContentText(currentDate + " " + currentTime)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(contentText))
@@ -71,7 +71,6 @@ public class DateNotifyService extends Service {
 
         startForeground(NOTIFICATION_ID, notification);
         
-        // अगर पहले से चल रहा है तो सिर्फ अपडेट कर देगा
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) {
             manager.notify(NOTIFICATION_ID, notification);
