@@ -1,9 +1,7 @@
 package com.bigdate.notify;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.Person;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
@@ -16,7 +14,6 @@ import androidx.core.app.NotificationCompat;
 import android.app.Service;
 import android.widget.RemoteViews;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
@@ -65,35 +62,27 @@ public class DateNotifyService extends Service {
         customView.setTextViewText(R.id.day_text, currentDay);
         customView.setTextViewText(R.id.time_text, currentTime);
 
+        // ये androidx वाला Person है - MessagingStyle के लिए सही है
+        androidx.core.app.Person messagingPerson = new androidx.core.app.Person.Builder()
+                .setName("Big Date Notify")
+                .setImportant(true)
+                .build();
+
+        NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(messagingPerson)
+                .setConversationTitle("Big Date Notify")
+                .addMessage(fullText, System.currentTimeMillis(), messagingPerson);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setCustomContentView(customView)
                 .setCustomBigContentView(customView)
-                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                .setStyle(messagingStyle) // Conversation बनने के लिए
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setSound(null)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE) // Message Category
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setShortcutId(SHORTCUT_ID); // यही जादू है
-
-        // Android 10+ के लिए Person बना कर Conversation में डालना
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Person person = new Person.Builder()
-                    .setName("Big Date Notify")
-                    .setImportant(true)
-                    .build();
-            
-            NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(person)
-                    .setConversationTitle("Big Date Notify")
-                    .addMessage(fullText, System.currentTimeMillis(), person)
-                    .setGroupConversation(false);
-            
-            builder.setStyle(messagingStyle);
-            // custom view फिर भी दिखेगा क्योंकि DecoratedCustomViewStyle है
-            builder.setCustomContentView(customView);
-            builder.setCustomBigContentView(customView);
-        }
+                .setShortcutId(SHORTCUT_ID);
 
         startForeground(NOTIFICATION_ID, builder.build());
     }
@@ -117,13 +106,18 @@ public class DateNotifyService extends Service {
                 ShortcutManager shortcutManager = (ShortcutManager) getSystemService(Context.SHORTCUT_SERVICE);
                 if (shortcutManager != null) {
                     Icon icon = Icon.createWithResource(this, android.R.drawable.ic_dialog_info);
-                    Person person = new Person.Builder().setName("Big Date Notify").build();
+                    // Shortcut के लिए android.app वाला Person चाहिए
+                    android.app.Person shortcutPerson = new android.app.Person.Builder()
+                            .setName("Big Date Notify")
+                            .setImportant(true)
+                            .build();
+
                     ShortcutInfo shortcut = new ShortcutInfo.Builder(this, SHORTCUT_ID)
                             .setLocusId(new android.content.LocusId(SHORTCUT_ID))
                             .setLongLived(true)
                             .setShortLabel("Big Date Notify")
                             .setIcon(icon)
-                            .setPerson(person)
+                            .setPerson(shortcutPerson)
                             .build();
                     shortcutManager.pushDynamicShortcut(shortcut);
                 }
@@ -139,4 +133,4 @@ public class DateNotifyService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
-}
+                }
